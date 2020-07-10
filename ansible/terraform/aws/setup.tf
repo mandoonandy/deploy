@@ -1,12 +1,23 @@
 provider "aws" {
   profile = "default"
-  region  = "ap-southeast-2"
+  region  = var.region
   version = "~> 2.27"
 }
 
-# Unused, here to keep my terrible script happy
-variable "ssh_key" {
-  description = "The ssh private key file to use"
+#
+# Input variables
+#
+variable "region" {
+  description = "AWS Region"
+}
+variable "ssh_key_name" {
+  description = "Name of the AWS SSH Key to add to the VM instance"
+}
+variable "uniqifier" {
+  description = "Unique instance name prefix to identify the cluster"
+}
+variable "vpc_security_group_id" {
+  description = "VPC security group ID"
 }
 
 data "aws_ami" "ubuntu" {
@@ -25,48 +36,54 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
+#
+# Resource configuration
+#
 resource "aws_instance" "sf_1" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "c5d.metal"
-  key_name      = "mikal-aws"
+  key_name      = var.ssh_key_name
   root_block_device {
     delete_on_termination = true
     volume_size           = 20
   }
   tags = {
-    Name = "sf-1"
+    Name = "${var.uniqifier}sf-1"
   }
-  vpc_security_group_ids = ["sg-0ff088c6b3e980ffd", "sg-0008a21805a524651"]
+  vpc_security_group_ids = [var.vpc_security_group_id]
 }
 
 resource "aws_instance" "sf_2" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "c5d.metal"
-  key_name      = "mikal-aws"
+  key_name      = var.ssh_key_name
   root_block_device {
     delete_on_termination = true
     volume_size           = 20
   }
   tags = {
-    Name = "sf-2"
+    Name = "${var.uniqifier}sf-2"
   }
-  vpc_security_group_ids = ["sg-0ff088c6b3e980ffd", "sg-0ae4a0742f580e222", "sg-0f4481fe67c40d267"]
+  vpc_security_group_ids = [var.vpc_security_group_id]
 }
 
 resource "aws_instance" "sf_3" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "c5d.metal"
-  key_name      = "mikal-aws"
+  key_name      = var.ssh_key_name
   root_block_device {
     delete_on_termination = true
     volume_size           = 20
   }
   tags = {
-    Name = "sf-3"
+    Name = "${var.uniqifier}sf-3"
   }
-  vpc_security_group_ids = ["sg-0ff088c6b3e980ffd", "sg-0ae4a0742f580e222", "sg-0f4481fe67c40d267"]
+  vpc_security_group_ids = [var.vpc_security_group_id]
 }
 
+#
+# Outputs
+#
 output "sf_1_external" {
   value = aws_instance.sf_1.public_ip
 }

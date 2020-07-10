@@ -7,10 +7,11 @@
 #
 
 #### Required settings
-CLOUD=$1
+CLOUD=${1:-$CLOUD}
 if [ -z "$CLOUD" ]
 then
-  echo ==== CLOUD must be specified: aws, gcp, metal, openstack
+  echo ==== CLOUD must be specified: aws, aws-single-node, gcp, metal, openstack
+  echo ==== eg.  ./deployandtest/sh gcp
   exit 1
 fi
 
@@ -18,9 +19,33 @@ if [ "$CLOUD" == "gcp" ] && [ -z "$GCP_PROJECT" ]
 then
   echo ===== Must specify GCP project in \$GCP_PROJECT
   exit 1
-else
   VARIABLES="$VARIABLES project=$GCP_PROJECT"
 fi
+
+if [ "$CLOUD" == "aws" ] || [ "$CLOUD" == "aws-single-node" ]
+then
+  if [ -z "$AWS_REGION" ]
+  then
+    echo ===== Must specify AWS region project in \$GCP_REGION
+    exit 1
+  fi
+  VARIABLES="$VARIABLES aws_region=$AWS_REGION"
+
+  if [ -z "$AWS_SSH_KEY_NAME" ]
+  then
+    echo ===== Must specify AWS Instance SSH key name in \$AWS_SSH_KEY_NAME
+    exit 1
+  fi
+  VARIABLES="$VARIABLES aws_ssh_key_name=$AWS_SSH_KEY_NAME"
+
+  if [ -z "$AWS_VPC_SECURITY_GROUP_ID" ]
+  then
+    echo ===== Must specify AWS VPC Security Group ID in \$AWS_VPC_SECURITY_GROUP_ID
+    exit 1
+  fi
+  VARIABLES="$VARIABLES aws_vpc_security_group_id=$AWS_VPC_SECURITY_GROUP_ID"
+fi
+
 
 #### Default settings
 BOOTDELAY="${BOOTDELAY:-2}"
